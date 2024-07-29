@@ -15,6 +15,11 @@ from udacity.common import final_project_sql_statements
 )
 def final_project():
 
+    @task
+    def drop_table_task3():
+        redshift_hook=PostgresHook("redshift")
+        redshift_hook.run('DROP TABLE IF EXISTS events_source3')
+
     create_table_task=PostgresOperator(
        task_id="create_table",
         postgres_conn_id="redshift",
@@ -46,7 +51,8 @@ def final_project():
     def create_table_task3():
         redshift_hook=PostgresHook("redshift")
         redshift_hook.run(final_project_sql_statements.SqlQueries.staging_events_table_create3)
-   
+
+    drop_table_task3=drop_table_task3()
     load_event_data_task=load_event_data_task()
     first_log=first_log()
     second_log=second_log()
@@ -56,5 +62,7 @@ def final_project():
     create_table_task1 >> first_log
     first_log >> create_table_task2
     create_table_task2 >> second_log
-    second_log >> create_table_task3
+    second_log >> drop_table_task3
+    drop_table_task3 >> create_table_task3
+
 final_project_dag = final_project()    
